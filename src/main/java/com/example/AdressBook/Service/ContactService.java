@@ -41,7 +41,7 @@ public class ContactService {
                 .map(existingContact -> {
                     existingContact.setName(contactDTO.getName());
                     existingContact.setEmail(contactDTO.getEmail());
-                    existingContact.setPhone(contactDTO.getPhone()); // ✅ Fix: Update Phone Number
+                    existingContact.setPhone(contactDTO.getPhone());
                     return contactMapper.toDTO(contactRepository.save(existingContact));
                 });
     }
