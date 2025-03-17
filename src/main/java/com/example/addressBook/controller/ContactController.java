@@ -1,12 +1,13 @@
 package com.example.addressBook.controller;
 
-import com.example.addressBook.model.Contact;
+import com.example.addressBook.dto.ContactDTO;
+import com.example.addressBook.dto.ResponseDTO;
 import com.example.addressBook.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contacts")
@@ -15,39 +16,52 @@ public class ContactController {
     @Autowired
     private ContactService contactService;
 
-    // Get all contacts
+    // ✅ GET: Fetch all contacts
     @GetMapping
-    public List<Contact> getAllContacts() {
-        return contactService.getAllContacts();
+    public ResponseEntity<ResponseDTO<List<ContactDTO>>> getAllContacts() {
+        List<ContactDTO> contactDTOs = contactService.getAllContacts();
+        return ResponseEntity.ok(new ResponseDTO<>("All contacts fetched successfully", contactDTOs));
     }
 
-    // Get contact by ID
+    // ✅ GET: Fetch contact by ID
     @GetMapping("/{id}")
-    public Optional<Contact> getContactById(@PathVariable Long id) {
-        return contactService.getContactById(id);
+    public ResponseEntity<ResponseDTO<ContactDTO>> getContactById(@PathVariable Long id) {
+        ContactDTO contact = contactService.getContactById(id);
+
+        if (contact != null) {
+            return ResponseEntity.ok(new ResponseDTO<>("Contact found", contact));
+        } else {
+            return ResponseEntity.status(404).body(new ResponseDTO<>("Contact not found", null));
+        }
     }
 
-    // Add a new contact
+    // ✅ POST: Add a new contact
     @PostMapping
-    public Contact addContact(@RequestBody Contact contact) {
-        return contactService.saveContact(contact);
+    public ResponseEntity<ResponseDTO<ContactDTO>> addContact(@RequestBody ContactDTO contactDTO) {
+        ContactDTO savedContact = contactService.saveContact(contactDTO);
+        return ResponseEntity.status(201).body(new ResponseDTO<>("Contact added successfully", savedContact));
     }
 
-    // Update a contact
+    // ✅ PUT: Update a contact
     @PutMapping("/{id}")
-    public Contact updateContact(@PathVariable Long id, @RequestBody Contact contactDetails) {
-        return contactService.getContactById(id).map(existingContact -> {
-            existingContact.setName(contactDetails.getName());
-            existingContact.setEmail(contactDetails.getEmail());
-            existingContact.setPhone(contactDetails.getPhone());
-            return contactService.saveContact(existingContact);
-        }).orElseThrow(() -> new RuntimeException("Contact not found with id " + id));
+    public ResponseEntity<ResponseDTO<ContactDTO>> updateContact(@PathVariable Long id, @RequestBody ContactDTO contactDTO) {
+        ContactDTO updatedContact = contactService.updateContact(id, contactDTO);
+
+        if (updatedContact != null) {
+            return ResponseEntity.ok(new ResponseDTO<>("Contact updated successfully", updatedContact));
+        } else {
+            return ResponseEntity.status(404).body(new ResponseDTO<>("Contact not found", null));
+        }
     }
 
-    // Delete a contact
+    // ✅ DELETE: Delete a contact
     @DeleteMapping("/{id}")
-    public String deleteContact(@PathVariable Long id) {
-        contactService.deleteContact(id);
-        return "Contact deleted successfully!";
+    public ResponseEntity<ResponseDTO<String>> deleteContact(@PathVariable Long id) {
+        boolean deleted = contactService.deleteContact(id);
+        if (deleted) {
+            return ResponseEntity.ok(new ResponseDTO<>("Contact deleted successfully", "ID: " + id));
+        } else {
+            return ResponseEntity.status(404).body(new ResponseDTO<>("Contact not found", null));
+        }
     }
 }
