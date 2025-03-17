@@ -2,7 +2,7 @@ package com.example.addressBook.controller;
 
 import com.example.addressBook.dto.ContactDTO;
 import com.example.addressBook.dto.ResponseDTO;
-import com.example.addressBook.service.ContactService;
+import com.example.addressBook.service.IAddressBookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +17,13 @@ import java.util.List;
 public class AddressBookController {
 
     @Autowired
-    private ContactService contactService;
+    private IAddressBookService addressBookService;
 
     // ✅ GET: Fetch all contacts
     @Operation(summary = "Fetch all contacts", description = "Retrieves a list of all contacts stored in the address book")
     @GetMapping
     public ResponseEntity<ResponseDTO<List<ContactDTO>>> getAllContacts() {
-        List<ContactDTO> contactDTOs = contactService.getAllContacts();
+        List<ContactDTO> contactDTOs = addressBookService.getAllContacts();
         return ResponseEntity.ok(new ResponseDTO<>("All contacts fetched successfully", contactDTOs));
     }
 
@@ -31,7 +31,7 @@ public class AddressBookController {
     @Operation(summary = "Fetch contact by ID", description = "Retrieves a specific contact using their unique ID")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO<ContactDTO>> getContactById(@PathVariable Long id) {
-        ContactDTO contactDTO = contactService.getContactById(id);
+        ContactDTO contactDTO = addressBookService.getContactById(id);
         if (contactDTO != null) {
             return ResponseEntity.ok(new ResponseDTO<>("Contact found", contactDTO));
         } else {
@@ -43,7 +43,7 @@ public class AddressBookController {
     @Operation(summary = "Add a new contact", description = "Creates a new contact in the address book")
     @PostMapping
     public ResponseEntity<ResponseDTO<ContactDTO>> addContact(@RequestBody ContactDTO contactDTO) {
-        ContactDTO savedContactDTO = contactService.saveContact(contactDTO);
+        ContactDTO savedContactDTO = addressBookService.saveContact(contactDTO);
         return ResponseEntity.status(201).body(new ResponseDTO<>("Contact added successfully", savedContactDTO));
     }
 
@@ -51,7 +51,7 @@ public class AddressBookController {
     @Operation(summary = "Update a contact", description = "Updates the details of an existing contact based on their ID")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseDTO<ContactDTO>> updateContact(@PathVariable Long id, @RequestBody ContactDTO contactDTO) {
-        ContactDTO updatedContactDTO = contactService.updateContact(id, contactDTO);
+        ContactDTO updatedContactDTO = addressBookService.updateContact(id, contactDTO);
         if (updatedContactDTO != null) {
             return ResponseEntity.ok(new ResponseDTO<>("Contact updated successfully", updatedContactDTO));
         } else {
@@ -63,7 +63,7 @@ public class AddressBookController {
     @Operation(summary = "Delete a contact", description = "Removes a contact from the address book using their ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO<String>> deleteContact(@PathVariable Long id) {
-        boolean deleted = contactService.deleteContact(id);
+        boolean deleted = addressBookService.deleteContact(id);
         if (deleted) {
             return ResponseEntity.ok(new ResponseDTO<>("Contact deleted successfully", "ID: " + id));
         } else {
