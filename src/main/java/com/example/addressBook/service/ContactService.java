@@ -30,7 +30,11 @@ public class ContactService {
     }
 
     // Delete contact by ID
-    public void deleteContact(Long id) {
-        contactRepository.deleteById(id);
+    public boolean deleteContact(Long id) {
+        if (contactRepository.existsById(id)) {
+            contactRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
