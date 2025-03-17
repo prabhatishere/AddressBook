@@ -10,8 +10,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthenticationService {
@@ -25,31 +29,29 @@ public class AuthenticationService {
     @Autowired
     private JwtTokenService jwtTokenService;
 
+    @Autowired
+    private EmailService emailService;
+
     public String register(AuthUserDTO userDTO) {
-        // Check if email already exists
         if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already in use");
         }
 
-        // Ensure password is not null
         if (userDTO.getPassword() == null || userDTO.getPassword().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty");
         }
 
-        // Create new user object
         AuthUser user = new AuthUser();
         user.setName(userDTO.getName());
         user.setEmail(userDTO.getEmail());
         user.setPhone(userDTO.getPhone());
 
-        // Encode password before saving to database
         String encodedPassword = passwordEncoder.encode(userDTO.getPassword());
         user.setHashPass(encodedPassword);
 
         userRepository.save(user);
         return "User registered successfully!";
     }
-
 
     public Map<String, String> login(LoginDTO loginDTO) {
         AuthUser user = userRepository.findByEmail(loginDTO.getEmail())
@@ -67,4 +69,35 @@ public class AuthenticationService {
         }
     }
 
+    public List<AuthUser> getAllUsers() {
+        return userRepository.findAll();  // Fetch all users
+    }
+
+    // Forgot Password: Generate Reset Token and Send Email
+    public void processForgotPassword(String email) {
+        AuthUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetToken(resetToken);
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15)); // Expires in 15 mins
+        userRepository.save(user);
+
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+    }
+
+    // Reset Password
+    public void resetPassword(String token, String newPassword) {
+        AuthUser user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid or expired token"));
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+        }
+
+        user.setHashPass(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+    }
 }
