@@ -2,6 +2,7 @@ package com.example.addressBook.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.io.Serializable; // ✅ Add this
 import java.time.LocalDateTime;
 
 @Table(name = "auth_user")
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class AuthUser {
+public class AuthUser implements Serializable {  // ✅ Implement Serializable
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

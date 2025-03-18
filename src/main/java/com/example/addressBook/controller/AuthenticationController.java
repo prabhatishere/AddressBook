@@ -19,8 +19,9 @@ public class AuthenticationController {
     private AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public String register(@RequestBody AuthUserDTO userDTO) {
-        return authenticationService.register(userDTO);
+    public ResponseEntity<String> register(@RequestBody AuthUserDTO userDTO) {
+        String response = authenticationService.register(userDTO);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -42,12 +43,15 @@ public class AuthenticationController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
+
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("Email is required");
         }
+
         authenticationService.processForgotPassword(email);
         return ResponseEntity.ok("Password reset email sent successfully.");
     }
+
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
